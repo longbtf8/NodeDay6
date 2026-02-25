@@ -18,3 +18,4 @@ async function authRequired(req, res, next) {
   req.currentUser = user;
   next();
 }
+module.exports = authRequired;
