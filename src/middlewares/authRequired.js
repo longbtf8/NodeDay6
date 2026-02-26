@@ -1,9 +1,11 @@
 const db = require("@/config/database");
+const authService = require("@/service/auth.service");
 
 async function authRequired(req, res, next) {
   const accessToken = req.header?.authorization?.slice(6).trim();
   const payload = await authService.verifyAccessToken(accessToken);
 
+  console.loq(accessToken);
   if (payload.exp < Date.now() / 1000) {
     return res.error(401, null, "Unauthorized");
   }

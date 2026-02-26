@@ -7,9 +7,7 @@ const { isValidEmail, isValidPassword } = require("@/utils/validator");
 const register = async (req, res) => {
   const email = req.body?.email;
   const password = req.body?.password;
-  const hashedPassword = await bcrypt.hash(password, authConfig.saltRounds);
 
-  console.log(email);
   if (!email) {
     return res.error(400, null, "Email không được để trống");
   }
@@ -17,12 +15,15 @@ const register = async (req, res) => {
   if (!password) {
     return res.error(400, null, "Mật khẩu không được để trống");
   }
+
   if (!isValidEmail(email)) {
     return res.error(400, null, "Email không hợp lệ");
   }
+
   if (!isValidPassword(password)) {
     return res.error(400, null, "Mật khẩu phải có ít nhất 6 ký tự");
   }
+  const hashedPassword = await bcrypt.hash(password, authConfig.saltRounds);
 
   // Kiểm tra email tồn tại
   const existingUser = await authModel.getInfoUserLogin(email);
