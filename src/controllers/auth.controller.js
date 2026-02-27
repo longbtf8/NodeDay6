@@ -45,9 +45,14 @@ const register = async (req, res) => {
 };
 const login = async (req, res) => {
   const { email, password } = req.body;
+
+  if (!email) return res.error(400, null, "Email không được để trống");
+  if (!password) return res.error(400, null, "Mật khẩu không được để trống");
+  if (!isValidEmail(email)) return res.error(400, null, "Email không hợp lệ");
+
   const user = await authModel.getInfoUserLogin(email);
   if (!user) {
-    return res.error(401, null, " Resource not found");
+    return res.error(401, null, "Resource not found");
   }
   const result = await bcrypt.compare(password, user.password);
   if (result) {
@@ -69,9 +74,8 @@ const getInfoUser = async (req, res) => {
 const logout = async (req, res) => {
   const { accessToken, tokenPayload } = req;
 
-  const query = `insert into revoked_tokens (token,expires_at) values (?,?)`;
-  await db.query(query, [accessToken, new Date(tokenPayload.exp)]);
-  res.success("hehe", 204);
+  await authModel.logout(accessToken, tokenPayload);
+  res.success(null, 204);
   return;
 };
 module.exports = { register, login, getInfoUser, logout };
