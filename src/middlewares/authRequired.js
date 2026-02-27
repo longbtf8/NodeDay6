@@ -6,8 +6,13 @@ async function authRequired(req, res, next) {
   const accessToken = req.headers?.authorization?.slice(6).trim();
   const payload = await authService.verifyAccessToken(accessToken);
 
-  if (payload.exp < Date.now()) {
-    console.log(Date.now(), payload.exp);
+  //check blacklist
+  const [[{ count }]] = await db.query(
+    `select count(*) as count from revoked_tokens where token=?`,
+    [accessToken],
+  );
+
+  if (count > 0 || payload.exp < Date.now()) {
     return res.error(401, null, "Unauthorized");
   }
   const [users] = await db.query(

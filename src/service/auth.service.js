@@ -55,7 +55,7 @@ class AuthService {
     const accessToken = await jwt2.sign(
       {
         sub: id,
-        exp: parseInt(Date.now() + ttl),
+        exp: parseInt(Date.now() + ttl * 1000),
       },
       process.env.AUTH_JWT_SECRET,
     );
