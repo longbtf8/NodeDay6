@@ -1,4 +1,6 @@
-const { JsonWebTokenError } = require("jsonwebtoken");
+// const { JsonWebTokenError } = require("jsonwebtoken");
+
+const JsonWebTokenError = require("@/classes/errors/jsonWebTokenError");
 
 const exceptionHandler = (err, req, res, next) => {
   if (res.headersSent) {

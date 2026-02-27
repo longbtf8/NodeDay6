@@ -3,6 +3,8 @@ const authService = require("@/service/auth.service");
 const authConfig = require("@/config/auth");
 const authModel = require("@/models/auth.model");
 const { isValidEmail, isValidPassword } = require("@/utils/validator");
+const getAccessToken = require("@/utils/getAccessToken");
+const db = require("@/config/database");
 
 const register = async (req, res) => {
   const email = req.body?.email;
@@ -63,4 +65,13 @@ const login = async (req, res) => {
 const getInfoUser = async (req, res) => {
   return res.success(req.currentUser);
 };
-module.exports = { register, login, getInfoUser };
+
+const logout = async (req, res) => {
+  const { accessToken, tokenPayload } = req;
+
+  const query = `insert into revoked_tokens (token,expires_at) values (?,?)`;
+  await db.query(query, [accessToken, new Date(tokenPayload.exp)]);
+  res.success("hehe", 204);
+  return;
+};
+module.exports = { register, login, getInfoUser, logout };

@@ -1,12 +1,13 @@
+const authConfig = require("@/config/auth");
 const db = require("@/config/database");
 const authService = require("@/service/auth.service");
 
 async function authRequired(req, res, next) {
-  const accessToken = req.header?.authorization?.slice(6).trim();
+  const accessToken = req.headers?.authorization?.slice(6).trim();
   const payload = await authService.verifyAccessToken(accessToken);
 
-  console.loq(accessToken);
-  if (payload.exp < Date.now() / 1000) {
+  if (payload.exp < Date.now()) {
+    console.log(Date.now(), payload.exp);
     return res.error(401, null, "Unauthorized");
   }
   const [users] = await db.query(
@@ -18,6 +19,8 @@ async function authRequired(req, res, next) {
     return res.error(401, null, "Unauthorized");
   }
   req.currentUser = user;
+  req.accessToken = accessToken;
+  req.tokenPayload = payload;
   next();
 }
 module.exports = authRequired;

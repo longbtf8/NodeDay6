@@ -2,6 +2,7 @@ const authConfig = require("@/config/auth");
 const jwt = require("jsonwebtoken");
 const base64 = require("../utils/base64");
 const crypto = require("crypto");
+const JsonWebTokenError = require("@/classes/errors/jsonWebTokenError");
 const jwt2 = {
   sign(payload, secret) {
     //header
@@ -20,22 +21,48 @@ const jwt2 = {
     const token = `${encodedHeader}.${encodedPayload}.${signature}`;
     return token;
   },
+  verify(token, secret) {
+    //encodedHeader , encodedPayload,signature
+    const tokens = token?.split(".");
+    if (!tokens) throw new JsonWebTokenError("No token");
+    const encodedHeader = tokens[0];
+    const encodedPayload = tokens[1];
+    const oldSignature = tokens[2];
+
+    // signature
+    const hmac = crypto.createHmac("sha256", secret);
+    hmac.update(`${encodedHeader}.${encodedPayload}`);
+
+    // new signature
+    const newSignature = hmac.digest("base64url");
+
+    const isValid = newSignature === oldSignature;
+    console.log(isValid);
+    if (isValid) {
+      const result = JSON.parse(base64.decode(encodedPayload, true));
+      return result;
+    }
+
+    //throw JsonWebTokenError
+    throw new JsonWebTokenError("Invalid Token");
+  },
 };
 
 class AuthService {
   async signAccessToken(id) {
     const ttl = authConfig.accessTokenTTL;
+    console.log(ttl);
     const accessToken = await jwt2.sign(
       {
         sub: id,
-        exp: Date.now() / 1000 + ttl,
+        exp: parseInt(Date.now() + ttl),
       },
       process.env.AUTH_JWT_SECRET,
     );
     return accessToken;
   }
   async verifyAccessToken(accessToken) {
-    const payload = jwt.verify(accessToken, authConfig.jwtSecret);
+    const payload = jwt2.verify(accessToken, authConfig.jwtSecret);
     return payload;
   }
 }
