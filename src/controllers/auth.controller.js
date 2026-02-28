@@ -1,7 +1,8 @@
 const bcrypt = require("bcrypt");
-const authService = require("@/service/auth.service");
+const authService = require("@/services/auth.service");
 const authConfig = require("@/config/auth");
 const authModel = require("@/models/auth.model");
+const revokedModel = require("@/models/revokedToken.model");
 const { isValidEmail, isValidPassword } = require("@/utils/validator");
 const getAccessToken = require("@/utils/getAccessToken");
 const db = require("@/config/database");
@@ -32,13 +33,22 @@ const register = async (req, res) => {
   if (existingUser) {
     return res.error(400, null, "Email đã tồn tại");
   }
+
   const insertId = await authModel.registerUser(email, hashedPassword);
 
   const accessToken = await authService.signAccessToken(insertId);
+  const user = {
+    id: insertId,
+  };
+  const refreshToken = await authService.createRefreshToken(
+    user,
+    req.headers["user-agent"],
+  );
   const newUser = {
     id: insertId,
     email,
     access_token: accessToken,
+    refresh_token: refreshToken,
   };
 
   return res.success(newUser);
@@ -78,7 +88,7 @@ const getInfoUser = async (req, res) => {
 const logout = async (req, res) => {
   const { accessToken, tokenPayload } = req;
 
-  await authModel.logout(accessToken, tokenPayload);
+  await revokedModel.logout(accessToken, tokenPayload);
   res.success(null, 204);
   return;
 };
@@ -87,7 +97,7 @@ const refreshToken = async (req, res) => {
 
   const refreshTokenDB = await authModel.selectRefreshToken(refresh_token);
   if (!refreshTokenDB) {
-    res.error(401, null, "Unauthorized");
+    return res.error(401, null, "Unauthorized");
   }
 
   const user = {
@@ -105,7 +115,7 @@ const refreshToken = async (req, res) => {
   res.success(
     {
       access_token: accessToken,
-      refresh_Token: refreshToken,
+      refresh_token: refreshToken,
     },
     200,
   );

@@ -1,4 +1,4 @@
-const userService = require("@/service/user.service");
+const userService = require("@/services/user.service");
 const findAll = async (req, res) => {
   const page = +req.query.page || 1;
   let limit = +req.query.limit || 20;

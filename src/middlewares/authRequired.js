@@ -1,9 +1,12 @@
 const authConfig = require("@/config/auth");
 const db = require("@/config/database");
-const authService = require("@/service/auth.service");
+const authService = require("@/services/auth.service");
 
 async function authRequired(req, res, next) {
   const accessToken = req.headers?.authorization?.slice(6).trim();
+
+  if (!accessToken) return res.error(401, null, "Unauthorized");
+
   const payload = await authService.verifyAccessToken(accessToken);
 
   //check blacklist

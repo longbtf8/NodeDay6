@@ -12,7 +12,7 @@ const findAll = async () => {
 
 const findOne = async (id) => {
   try {
-    const [rows] = await pool.query(`SELECT * FROM tasks WHERE id = ${id};`);
+    const [rows] = await pool.query(`SELECT * FROM tasks WHERE id = ?;`, [id]);
     return rows[0];
   } catch (error) {
     console.log(error);
@@ -21,9 +21,9 @@ const findOne = async (id) => {
 const create = async (taskData) => {
   try {
     const title = taskData;
-    const [rows] = await pool.query(
-      `INSERT INTO tasks (title) VALUES ("${title}")`,
-    );
+    const [rows] = await pool.query(`INSERT INTO tasks (title) VALUES (?)`, [
+      title,
+    ]);
 
     if (rows) {
       return true;
@@ -36,7 +36,8 @@ const update = async (id, taskData) => {
   try {
     const title = taskData;
     const [rows] = await pool.query(
-      `UPDATE tasks SET title = '${title}' WHERE id = ${id}`,
+      `UPDATE tasks SET title = '${title}' WHERE id = ?`,
+      [id],
     );
     console.log(rows);
 
@@ -50,7 +51,7 @@ const update = async (id, taskData) => {
 };
 const destroy = async (id) => {
   try {
-    const [rows] = await pool.query(`DELETE FROM tasks WHERE id = ${id}`);
+    const [rows] = await pool.query(`DELETE FROM tasks WHERE id = ?`, [id]);
     console.log(rows);
 
     if (rows) {
