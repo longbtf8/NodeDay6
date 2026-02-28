@@ -16,7 +16,7 @@ const db = mysql.createPool({
   enableKeepAlive: true,
   keepAliveInitialDelay: 0,
   ssl: {
-    ca: fs.readSync(__dirname + "/isrgrootx1.pem"),
+    ca: fs.readFileSync(__dirname + "/isrgrootx1.pem"),
     rejectUnauthorized: true,
   },
 });
