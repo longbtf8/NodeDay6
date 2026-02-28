@@ -57,11 +57,15 @@ const login = async (req, res) => {
   const result = await bcrypt.compare(password, user.password);
   if (result) {
     const accessToken = await authService.signAccessToken(user.id);
-
+    const refreshToken = await authService.createRefreshToken(
+      user,
+      req.headers["user-agent"],
+    );
     return res.success({
       id: user.id,
       email: user.email,
       access_token: accessToken,
+      refresh_token: refreshToken,
     });
   }
 
@@ -78,4 +82,32 @@ const logout = async (req, res) => {
   res.success(null, 204);
   return;
 };
-module.exports = { register, login, getInfoUser, logout };
+const refreshToken = async (req, res) => {
+  const { refresh_token } = req.body;
+
+  const refreshTokenDB = await authModel.selectRefreshToken(refresh_token);
+  if (!refreshTokenDB) {
+    res.error(401, null, "Unauthorized");
+  }
+
+  const user = {
+    id: refreshTokenDB.user_id,
+  };
+  // create new access & refreshToken
+  const accessToken = await authService.signAccessToken(user.id);
+  const refreshToken = await authService.createRefreshToken(
+    user,
+    req.headers["user-agent"],
+  );
+
+  // revoke old refresh Token
+  authModel.updateRevokedRefreshToken(refreshTokenDB);
+  res.success(
+    {
+      access_token: accessToken,
+      refresh_Token: refreshToken,
+    },
+    200,
+  );
+};
+module.exports = { register, login, getInfoUser, logout, refreshToken };
